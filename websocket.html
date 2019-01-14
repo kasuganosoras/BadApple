@@ -1,0 +1,101 @@
+<style>
+	body {
+		background: #000;
+		text-align: center;
+	}
+	.box {
+		text-align: center;
+		background-color: rgba(0, 173, 255, 0.8);
+		border-radius: 20px;
+		width: 640px;
+		height: 600px;
+		margin: auto;
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		text-shadow: 0px 0px 16px rgba(0,0,0,0.5);
+		box-shadow: 0px 0px 16px #000;
+		color: #FFF;
+	}
+	.box img {
+		border-radius: 0px 0px 20px 20px;
+	}
+	#msglist {
+		color: #FFF;
+		width: 880px;
+		height: 750px;
+		overflow: hidden;
+	}
+</style>
+	<!--<div class="box">
+		<h1>BadApple!!</h1>
+		<p>WebSocket 播放器</p>
+		<pre id="msglist"></pre>
+	</div>-->
+	<pre id="msglist"></pre>
+<audio src="badapple.mp3" controls="controls" preload id="music1" hidden>
+<script type="text/javascript">var websocket;
+    window.onload = function() {
+        connect();
+    }
+	var firstconnect = true;
+	function connect() {
+		var ws_server = 'ws://localhost:1232/';
+        if (window.WebSocket) {
+            websocket = new WebSocket(ws_server);
+
+            //连接到服务器的时候
+            websocket.onopen = function(event) {
+                if (websocket.readyState == 1) {
+                    console.log("成功连接到 WebSocket 服务器！");
+					var audio = document.getElementById('music1');
+					audio.play();
+					firstconnect = false;
+                }
+            }
+            //收到服务器的消息
+            websocket.onmessage = function(event) {
+                var msg = event.data; //decodeURI(event.data);
+				if(msg == "restart") {
+					var audio = document.getElementById('music1');
+					audio.currentTime = 0;
+				}
+				msglist.innerHTML = msg;
+            }
+
+            //发生错误，连接失败等情况  
+            websocket.onerror = function(event) {
+                console.log("[ERROR] 无法连接至 WebSocket 服务器");
+				connect();
+				var audio = document.getElementById('music1');
+				audio.pause();
+            }
+
+            //WebSocket 连接状态变化，连接关闭等  
+            websocket.onclose = function(event) {
+                console.log('[INFO] 与 WebSocket 服务器的连接已断开');
+				if(!firstconnect) {
+					connect();
+				}
+            }
+        } else {
+            console.log("[ERROR] 此浏览器不支持 WebSocket 协议，请使用 Chrome 等现代浏览器");
+        }
+	}
+	
+    //发送消息函数 ws_send("用户名", "消息内容")
+    function ws_send(user, message) {
+        var msg = {
+            name: user,
+            message: message
+        };
+        try {
+            websocket.send(JSON.stringify(msg));
+            return true;
+        } catch(ex) {
+            console.log(ex);
+        }
+    }
+</script>
